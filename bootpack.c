@@ -1,7 +1,7 @@
 //bootpack関連
 
 #include "bootpack.h"
-#include<stdio.h>
+#include <stdio.h>
 
 void HariMain(void){
 

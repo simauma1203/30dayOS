@@ -26,7 +26,6 @@ CYLS    EQU 10 ;どこまで読むか
         DB "FAT12   " ;format
         RESB 18
 
-;main program
 
 entry:
         MOV AX,0 ;init

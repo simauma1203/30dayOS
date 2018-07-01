@@ -28,85 +28,84 @@
     27 00007C3E 00 00 00 00 00 00 00 00 00 00           RESB 18
        00007C48 00 00 00 00 00 00 00 00 
     28 00007C50                                 
-    29 00007C50                                 ;main program
-    30 00007C50                                 
-    31 00007C50                                 entry:
-    32 00007C50 B8 0000                                 MOV AX,0 ;init
-    33 00007C53 8E D0                                   MOV SS,AX
-    34 00007C55 BC 7C00                                 MOV SP,0x7c00
-    35 00007C58 8E D8                                   MOV DS,AX
-    36 00007C5A                                 
-    37 00007C5A                                 ;read disk
-    38 00007C5A                                 
-    39 00007C5A B8 0820                                 MOV AX,0x0820
-    40 00007C5D 8E C0                                   MOV ES,AX
-    41 00007C5F B5 00                                   MOV CH,0 ;cylinder0
-    42 00007C61 B6 00                                   MOV DH,0 ;head0
-    43 00007C63 B1 02                                   MOV CL,2 ;sector2
-    44 00007C65                                 
-    45 00007C65                                 readloop:
-    46 00007C65 BE 0000                             MOV SI,0 ;失敗回数を数えるレジスタ
-    47 00007C68                                 
-    48 00007C68                                 retry:
-    49 00007C68 B4 02                               MOV AH,0x02 ;AH=0x02 : read disk
-    50 00007C6A B0 01                               MOV AL,1 ;1sector
-    51 00007C6C BB 0000                             MOV BX,0
-    52 00007C6F B2 00                               MOV DL,0x00 ;A drive
-    53 00007C71 CD 13                               INT 0x13 ;call disk BIOS
-    54 00007C73 73 10                               JNC next ;エラーがおきなけれればfin
-    55 00007C75 83 C6 01                            ADD SI,1
-    56 00007C78 83 FE 05                            CMP SI,5
-    57 00007C7B 73 32                               JAE error ;SI>=5ならerror
-    58 00007C7D B4 00                               MOV AH,0x00
-    59 00007C7F B2 00                               MOV DL,0x00 ;A drive
-    60 00007C81 CD 13                               INT 0x13 ;reset drive
-    61 00007C83 EB E3                               JMP retry 
-    62 00007C85                                 next:
-    63 00007C85 8C C0                               MOV AX,ES ;
-    64 00007C87 05 0020                             ADD AX,0x0020 ;
-    65 00007C8A 8E C0                               MOV ES,AX ;ADD ES 0x20  0x20=512/16
-    66 00007C8C 80 C1 01                            ADD CL,1
-    67 00007C8F 80 F9 12                            CMP CL,18
-    68 00007C92 76 D1                               JBE readloop ;CL<=18ならreadloop
-    69 00007C94 B1 01                               MOV CL,1
-    70 00007C96 80 C6 01                            ADD DH,1
-    71 00007C99 80 FE 02                            CMP DH,2
-    72 00007C9C 72 C7                               JB readloop ;DH<2なら
-    73 00007C9E B6 00                               MOV DH,0
-    74 00007CA0 80 C5 01                            ADD CH,1
-    75 00007CA3 80 FD 0A                            CMP CH,CYLS
-    76 00007CA6 72 BD                               JB readloop
-    77 00007CA8                                 
-    78 00007CA8                                 ; haribote.sysを実行
-    79 00007CA8                                     
-    80 00007CA8 88 2E 0FF0                          MOV [0x0ff0],CH ;iplがどこまで読んだか
-    81 00007CAC E9 4551                             JMP 0xc200
-    82 00007CAF                                 
-    83 00007CAF                                 error:
-    84 00007CAF BE 7CC7                             MOV SI,msg
-    85 00007CB2                                     
-    86 00007CB2                                 putloop:
-    87 00007CB2 8A 04                               MOV AL,[SI]
-    88 00007CB4 83 C6 01                            ADD SI,1
-    89 00007CB7 3C 00                               CMP AL,0
-    90 00007CB9 74 09                               JE fin
-    91 00007CBB B4 0E                               MOV AH,0x0e ;print 1character
-    92 00007CBD BB 000F                             MOV BX,15 ;color code
-    93 00007CC0 CD 10                               INT 0x10 ;call video BIOS
-    94 00007CC2 EB EE                               JMP putloop
-    95 00007CC4                                 
-    96 00007CC4                                 ;よみおわり
-    97 00007CC4                                 fin:
-    98 00007CC4 F4                                  HLT
-    99 00007CC5 EB FD                               JMP fin
-   100 00007CC7                                 
-   101 00007CC7                                 msg:
-   102 00007CC7 0A 0A                               DB 0x0a,0x0a ;LF*2
-   103 00007CC9 6C 6F 61 64 20 65 72 72 6F 72       DB "load error"
-   104 00007CD3 0A                                  DB 0x0a
-   105 00007CD4 00                                  DB 0
-   106 00007CD5                                 
-   107 00007CD5 00 00 00 00 00 00 00 00 00 00       RESB 0x7dfe-$ ;0x7dfeまで0x00で埋める
+    29 00007C50                                 
+    30 00007C50                                 entry:
+    31 00007C50 B8 0000                                 MOV AX,0 ;init
+    32 00007C53 8E D0                                   MOV SS,AX
+    33 00007C55 BC 7C00                                 MOV SP,0x7c00
+    34 00007C58 8E D8                                   MOV DS,AX
+    35 00007C5A                                 
+    36 00007C5A                                 ;read disk
+    37 00007C5A                                 
+    38 00007C5A B8 0820                                 MOV AX,0x0820
+    39 00007C5D 8E C0                                   MOV ES,AX
+    40 00007C5F B5 00                                   MOV CH,0 ;cylinder0
+    41 00007C61 B6 00                                   MOV DH,0 ;head0
+    42 00007C63 B1 02                                   MOV CL,2 ;sector2
+    43 00007C65                                 
+    44 00007C65                                 readloop:
+    45 00007C65 BE 0000                             MOV SI,0 ;失敗回数を数えるレジスタ
+    46 00007C68                                 
+    47 00007C68                                 retry:
+    48 00007C68 B4 02                               MOV AH,0x02 ;AH=0x02 : read disk
+    49 00007C6A B0 01                               MOV AL,1 ;1sector
+    50 00007C6C BB 0000                             MOV BX,0
+    51 00007C6F B2 00                               MOV DL,0x00 ;A drive
+    52 00007C71 CD 13                               INT 0x13 ;call disk BIOS
+    53 00007C73 73 10                               JNC next ;エラーがおきなけれればfin
+    54 00007C75 83 C6 01                            ADD SI,1
+    55 00007C78 83 FE 05                            CMP SI,5
+    56 00007C7B 73 32                               JAE error ;SI>=5ならerror
+    57 00007C7D B4 00                               MOV AH,0x00
+    58 00007C7F B2 00                               MOV DL,0x00 ;A drive
+    59 00007C81 CD 13                               INT 0x13 ;reset drive
+    60 00007C83 EB E3                               JMP retry 
+    61 00007C85                                 next:
+    62 00007C85 8C C0                               MOV AX,ES ;
+    63 00007C87 05 0020                             ADD AX,0x0020 ;
+    64 00007C8A 8E C0                               MOV ES,AX ;ADD ES 0x20  0x20=512/16
+    65 00007C8C 80 C1 01                            ADD CL,1
+    66 00007C8F 80 F9 12                            CMP CL,18
+    67 00007C92 76 D1                               JBE readloop ;CL<=18ならreadloop
+    68 00007C94 B1 01                               MOV CL,1
+    69 00007C96 80 C6 01                            ADD DH,1
+    70 00007C99 80 FE 02                            CMP DH,2
+    71 00007C9C 72 C7                               JB readloop ;DH<2なら
+    72 00007C9E B6 00                               MOV DH,0
+    73 00007CA0 80 C5 01                            ADD CH,1
+    74 00007CA3 80 FD 0A                            CMP CH,CYLS
+    75 00007CA6 72 BD                               JB readloop
+    76 00007CA8                                 
+    77 00007CA8                                 ; haribote.sysを実行
+    78 00007CA8                                     
+    79 00007CA8 88 2E 0FF0                          MOV [0x0ff0],CH ;iplがどこまで読んだか
+    80 00007CAC E9 4551                             JMP 0xc200
+    81 00007CAF                                 
+    82 00007CAF                                 error:
+    83 00007CAF BE 7CC7                             MOV SI,msg
+    84 00007CB2                                     
+    85 00007CB2                                 putloop:
+    86 00007CB2 8A 04                               MOV AL,[SI]
+    87 00007CB4 83 C6 01                            ADD SI,1
+    88 00007CB7 3C 00                               CMP AL,0
+    89 00007CB9 74 09                               JE fin
+    90 00007CBB B4 0E                               MOV AH,0x0e ;print 1character
+    91 00007CBD BB 000F                             MOV BX,15 ;color code
+    92 00007CC0 CD 10                               INT 0x10 ;call video BIOS
+    93 00007CC2 EB EE                               JMP putloop
+    94 00007CC4                                 
+    95 00007CC4                                 ;よみおわり
+    96 00007CC4                                 fin:
+    97 00007CC4 F4                                  HLT
+    98 00007CC5 EB FD                               JMP fin
+    99 00007CC7                                 
+   100 00007CC7                                 msg:
+   101 00007CC7 0A 0A                               DB 0x0a,0x0a ;LF*2
+   102 00007CC9 6C 6F 61 64 20 65 72 72 6F 72       DB "load error"
+   103 00007CD3 0A                                  DB 0x0a
+   104 00007CD4 00                                  DB 0
+   105 00007CD5                                 
+   106 00007CD5 00 00 00 00 00 00 00 00 00 00       RESB 0x7dfe-$ ;0x7dfeまで0x00で埋める
        00007CDF 00 00 00 00 00 00 00 00 00 00 
        00007CE9 00 00 00 00 00 00 00 00 00 00 
        00007CF3 00 00 00 00 00 00 00 00 00 00 
@@ -136,8 +135,8 @@
        00007DE3 00 00 00 00 00 00 00 00 00 00 
        00007DED 00 00 00 00 00 00 00 00 00 00 
        00007DF7 00 00 00 00 00 00 00 
-   108 00007DFE                                 
-   109 00007DFE 55 AA                               DB 0x55,0xaa
+   107 00007DFE                                 
+   108 00007DFE 55 AA                               DB 0x55,0xaa
+   109 00007E00                                 
    110 00007E00                                 
    111 00007E00                                 
-   112 00007E00                                 
