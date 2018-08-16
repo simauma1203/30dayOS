@@ -17,7 +17,6 @@ VRAM    EQU 0x0ff8 ;グラフィックバッファ開始番地
     MOV AL,0x13 ;VGAグラフィックス 320*200 8bit color
     MOV AH,0x00
     INT 0x10
-
     MOV BYTE[VMODE],8
     MOV WORD[SCRNX],320
     MOV WORD[SCRNY],200

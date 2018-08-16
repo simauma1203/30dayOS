@@ -1,6 +1,7 @@
 //割り込み関係
 
 #include "bootpack.h"
+#include <stdio.h>
 
 void init_pic(void){
 
@@ -23,29 +24,7 @@ void init_pic(void){
     return;
 }
 
-#define PORT_KEYDAT 0x0060
 
-void inthandler21(int *esp){
-    struct BOOTINFO *binfo =(struct BOOTINFO *)ADR_BOOTINFO;
-    unsigned char data,s[4];
-    io_out8(PIC0_OCW2,0x61);
-    data=io_in8(PORT_KEYDAT);
-
-    sprintf(s,"%02X",data);
-    boxfill8(binfo->vram,binfo->scrnx,COL8_008484,0,16,15,31);
-    putfonts8_asc(binfo->vram,binfo->scrnx,0,16,COL8_FFFFFF,s);
-    
-    return;
-}
-
-void inthandler2c(int *esp){
-    struct BOOTINFO *binfo =(struct BOOTINFO *)ADR_BOOTINFO;
-    boxfill8(binfo->vram,binfo->scrnx,COL8_000000,0,0,32*8-1,15);
-    putfonts8_asc(binfo->vram,binfo->scrnx,0,0,COL8_FFFFFF,"INT 2C (IRQ-12) : PS/2 mouse");
-    for(;;){
-        io_hlt();
-    }
-}
 
 /* PIC0からの不完全割り込み対策 */
 /* Athlon64X2機などではチップセットの都合によりPICの初期化時にこの割り込みが1度だけおこる */

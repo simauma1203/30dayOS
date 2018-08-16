@@ -9,9 +9,13 @@ void init_gdtidt(void){
     //GDT初期化
     for(i=0;i<=LIMIT_GDT/8;i++){
         set_segmdesc(gdt+i,0,0,0);
+        //gdtは8byteへのポインタだから1足すと8増える
     }
+    //0~0xff...ff(4GB)をGDTにする
     set_segmdesc(gdt+1,0xffffffff,0x0000000,AR_DATA32_RW);
+    //512kb 番地0x280000 
     set_segmdesc(gdt+2,LIMIT_BOTPAK,ADR_BOTPAK,AR_CODE32_ER);
+    //gdtrに代入
     load_gdtr(LIMIT_GDT,ADR_GDT);
 
     //IDT初期化
@@ -21,21 +25,24 @@ void init_gdtidt(void){
     load_idtr(LIMIT_IDT,ADR_IDT);
 
     //IDT設定
+    set_gatedesc(idt+0x20,(int)asm_inthandler20,2*8,AR_INTGATE32);
     set_gatedesc(idt+0x21,(int)asm_inthandler21,2*8,AR_INTGATE32);
     set_gatedesc(idt+0x27,(int)asm_inthandler27,2*8,AR_INTGATE32);
     set_gatedesc(idt+0x2c,(int)asm_inthandler2c,2*8,AR_INTGATE32);
-
+    
     return;
 }
 
+//セグメントの大きさ,始まる番地,セグメント管理属性
 void set_segmdesc(struct SEGMENT_DESCRIPTOR *sd,unsigned int limit,int base,int ar){
 
     if(limit>0xfffff){
         ar |=0x8000;
         limit /=0x1000;
     }
+    //切り分けて代入
     sd->limit_low=limit & 0xffff;
-    sd->base_low=base & 0xffff;
+    sd->base_low=base & 0xffff; 
     sd->base_mid=(base>>16) & 0xff;
     sd->access_right= ar & 0xff;
     sd->limit_high=((limit>>16) & 0x0f) | ((ar>>8) & 0xf0);
