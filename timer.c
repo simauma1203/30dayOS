@@ -10,7 +10,6 @@ struct TIMERCTL timerctl;
 #define TIMER_FLAGS_ALLOC 1
 #define TIMER_FLAGS_USING 2
 
-
 void init_pit(void){
     int i;
     struct TIMER *t;
@@ -52,54 +51,70 @@ void timer_init(struct TIMER *timer,struct FIFO32 *fifo,int data){
     timer->data=data;
     return;
 }
-void timer_settime(struct TIMER *timer,unsigned int timeout){
-    int e;
-    struct TIMER *t,*s;
-    timer->timeout=timeout+timerctl.count;
-    timer->flags=TIMER_FLAGS_USING;
-    e=io_load_eflags();
-    io_cli();
-    t=timerctl.t0;
-    if(timer->timeout<= t->timeout){
-        timerctl.t0=timer;
-        timer->next=t;
-        timerctl.next=timer->timeout;
-        io_store_eflags(e);
-        return;
-    }
 
-    for(;;){
-        s=t;
-        t=t->next;
-        if(timer->timeout<= t->timeout){
-            s->next=timer;
-            timer->next=t;
-            io_store_eflags(e);
-            return;
-        }
-    }
+
+void timer_settime(struct TIMER *timer, unsigned int timeout)
+{
+	int e;
+	struct TIMER *t, *s;
+	timer->timeout = timeout + timerctl.count;
+	timer->flags = TIMER_FLAGS_USING;
+	e = io_load_eflags();
+	io_cli();
+	t = timerctl.t0;
+	if (timer->timeout <= t->timeout) {
+		/* 先頭に入れる場合 */
+		timerctl.t0 = timer;
+		timer->next = t; /* 次はt */
+		timerctl.next = timer->timeout;
+		io_store_eflags(e);
+		return;
+	}
+	/* どこに入れればいいかを探す */
+	for (;;) {
+		s = t;
+		t = t->next;
+		if (timer->timeout <= t->timeout) {
+			/* sとtの間に入れる場合 */
+			s->next = timer; /* sの次はtimer */
+			timer->next = t; /* timerの次はt */
+			io_store_eflags(e);
+			return;
+		}
+	}
 }
 
-void inthandler20(int *esp){
-    struct TIMER *timer;
-    io_out8(PIC0_OCW2,0x60);//IRQ-00受付完了をPICに通知
-    timerctl.count++;
-    if(timerctl.next>timerctl.count){
-        return;//まだきてない
-    }
-    //先頭番地
-    timer=timerctl.t0;
-    for(;;){
-        //timersはさどうちゅうなのでflagsを確認しない
-        if(timer->timeout>timerctl.count){
-            break;
-        }
-        //timeout
-        timer->flags=TIMER_FLAGS_ALLOC;
-        fifo32_put(timer->fifo,timer->data);
-        timer=timer->next;
-    }
-    timerctl.t0=timer;
-    timerctl.next=timer->timeout;
-    return;
+
+void inthandler20(int *esp)
+{
+	struct TIMER *timer;
+	char ts = 0;
+	io_out8(PIC0_OCW2, 0x60);	/* IRQ-00受付完了をPICに通知 */
+	timerctl.count++;
+	if (timerctl.next > timerctl.count) {
+		return;
+	}
+	timer = timerctl.t0; /* とりあえず先頭の番地をtimerに代入 */
+	for (;;) {
+		/* timersのタイマは全て動作中のものなので、flagsを確認しない */
+		if (timer->timeout > timerctl.count) {
+			break;
+		}
+		/* タイムアウト */
+		timer->flags = TIMER_FLAGS_ALLOC;
+		if (timer != task_timer) {
+			fifo32_put(timer->fifo, timer->data);
+		} else {
+			ts = 1; /* task_timerがタイムアウトした */
+		}
+		timer = timer->next; /* 次のタイマの番地をtimerに代入 */
+	}
+	timerctl.t0 = timer;
+	timerctl.next = timer->timeout;
+	if (ts != 0) {
+		task_switch();
+	}
+	return;
 }
+
+
