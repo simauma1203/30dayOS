@@ -1,20 +1,21 @@
-//
+/* FIFOライブラリ */
+
 #include "bootpack.h"
 
-#define FLAGS_OVERRUN 0x0001
+#define FLAGS_OVERRUN		0x0001
 
-//fifoバッファの初期化
-void fifo32_init(struct FIFO32 *fifo,int size,int *buf,struct TASK *task){
-    fifo->size=size;
-    fifo->buf=buf;
-    fifo->free=size;//空き
-    fifo->flags=0;
-    fifo->p=0;//書き込み位置
-    fifo->q=0;//読み込み位置
-    fifo->task=task;
-    return;
+void fifo32_init(struct FIFO32 *fifo, int size, int *buf, struct TASK *task)
+/* FIFOバッファの初期化 */
+{
+	fifo->size = size;
+	fifo->buf = buf;
+	fifo->free = size; /* 空き */
+	fifo->flags = 0;
+	fifo->p = 0; /* 書き込み位置 */
+	fifo->q = 0; /* 読み込み位置 */
+	fifo->task = task; /* データが入ったときに起こすタスク */
+	return;
 }
-
 
 int fifo32_put(struct FIFO32 *fifo, int data)
 /* FIFOへデータを送り込んで蓄える */
@@ -38,22 +39,25 @@ int fifo32_put(struct FIFO32 *fifo, int data)
 	return 0;
 }
 
-
-int fifo32_get(struct FIFO32 *fifo){
-    int data;
-    if(fifo->free==fifo->size){
-        //バッファ空っぽ
-        return -1;
-    }
-    data=fifo->buf[fifo->q];
-    fifo->q++;
-    if(fifo->q==fifo->size){
-        fifo->q=0;
-    }
-    fifo->free++;
-    return data;
+int fifo32_get(struct FIFO32 *fifo)
+/* FIFOからデータを一つとってくる */
+{
+	int data;
+	if (fifo->free == fifo->size) {
+		/* バッファが空っぽのときは、とりあえず-1が返される */
+		return -1;
+	}
+	data = fifo->buf[fifo->q];
+	fifo->q++;
+	if (fifo->q == fifo->size) {
+		fifo->q = 0;
+	}
+	fifo->free++;
+	return data;
 }
 
-int fifo32_status(struct FIFO32 *fifo){
-    return fifo->size-fifo->free;
+int fifo32_status(struct FIFO32 *fifo)
+/* どのくらいデータが溜まっているかを報告する */
+{
+	return fifo->size - fifo->free;
 }
